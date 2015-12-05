@@ -2,10 +2,20 @@
 
 <!DOCTYPE html>
 <html>
+
 <head>
 	<meta charset="UTF-8">
-	<!-- <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.css' %}" /> -->
+	<title>Морський бій</title>
+	<link rel="shortcut icon" href="{% static 'img/favicon.png' %}" type="image/x-icon">
+	<link href="{% static 'css/styles.css' %}"  rel="stylesheet" media="all"/>
+	<link rel="stylesheet" type="text/css" href="{% static 'css/header.css' %}" />
+	<link rel="stylesheet" type="text/css" href="{% static 'css/explosion.css' %}" />
+
+	<audio src="{% static 'audio/epidemia_epilog.mp3' %}" autoplay="autoplay">
+		Ваш браузер не поддерживает теги <audio> </audio>! Обновите версию браузера!
+	</audio>
 </head>
+
 <body>
 	{% include "header.html" %}
 	{% block content %}

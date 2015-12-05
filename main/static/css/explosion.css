@@ -1,0 +1,38 @@
+@-webkit-keyframes boom {
+	0%     { -webkit-transform: translateZ(0) translateX(46px)   translateY(0px); }
+	25%    { -webkit-transform: translateZ(0) translateX(-419px) translateY(0px); }
+	25.01% { -webkit-transform: translateZ(0) translateX(46px)   translateY(-50px); }
+	50%    { -webkit-transform: translateZ(0) translateX(-419px) translateY(-50px); }
+	50.01% { -webkit-transform: translateZ(0) translateX(46px)   translateY(-100px); }
+	75%    { -webkit-transform: translateZ(0) translateX(-419px) translateY(-100px); }
+	75.01% { -webkit-transform: translateZ(0) translateX(46px)   translateY(-150px); }
+	100%   { -webkit-transform: translateZ(0) translateX(-419px) translateY(-150px); }
+}
+
+.explosion {
+	position: absolute;
+	width: 46px;
+	height: 50px;
+
+	overflow: hidden;
+	/*border: 1px orange dashed;*/
+}
+.explosion:after {
+	background-image: url('/static/img/sprite-explosion_SMALL.png');
+	-webkit-animation: boom 2s steps(10,start) infinite;
+	/*position: absolute;*/
+	width: 465px;
+	height: 200px;
+	content: "";
+	display: block;
+
+	-webkit-animation-delay: 0s;
+	top: 30%;	
+	left: 60%;
+
+	/*border: 1px blue dashed;*/
+}
+/*#explosion1:after {	-webkit-animation-delay: 0s;	}	#explosion1 {	top: 30%;	left: 60%;	}*/
+/*#explosion2:after {	-webkit-animation-delay: 0.5s;	}	#explosion2 {	top: 40%;	left: 40%;	}
+#explosion3:after {	-webkit-animation-delay: 1.2s;	}	#explosion3 {	top: 9%;	left: 62%;	}
+#explosion4:after {	-webkit-animation-delay: 1.5s;	}	#explosion4 {	top: 70%;	left: 80%;	}*/

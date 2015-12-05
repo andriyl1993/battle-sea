@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html><head>
+		<title>Sprite Animation</title>
+		<style type="text/css"><!--
+
+@-webkit-keyframes boom {
+	0%     { -webkit-transform: translateZ(0) translateX(93px)   translateY(0px); }
+	25%    { -webkit-transform: translateZ(0) translateX(-837px) translateY(0px); }
+	25.01% { -webkit-transform: translateZ(0) translateX(93px)   translateY(-100px); }
+	50%    { -webkit-transform: translateZ(0) translateX(-837px) translateY(-100px); }
+	50.01% { -webkit-transform: translateZ(0) translateX(93px)   translateY(-200px); }
+	75%    { -webkit-transform: translateZ(0) translateX(-837px) translateY(-200px); }
+	75.01% { -webkit-transform: translateZ(0) translateX(93px)   translateY(-300px); }
+	100%   { -webkit-transform: translateZ(0) translateX(-837px) translateY(-300px); }
+}
+
+/* 930 x 400 */
+html, body {
+	height: 100%;
+	width: 100%;
+}
+body {
+	/* Space ship image originally from http://commons.wikimedia.org/wiki/File:Orion,_battle_spaceship.jpg */
+	/*background-image: url(spaceships-background.jpg);*/
+	background-size: cover;
+	background-repeat: no-repeat;
+	margin: 0;
+}
+.explosion {
+	position: absolute;
+	width: 93px;
+	height: 100px;
+
+	overflow: hidden;
+	/*border: 1px orange dashed;*/
+}
+.explosion:after {
+	background-image: url(sprite-explosion.png);
+	-webkit-animation: boom 2s steps(10,start) infinite;
+	/*position: absolute;*/
+	width: 930px;
+	height: 400px;
+	content: "";
+	display: block;
+
+	/*border: 1px blue dashed;*/
+}
+#explosion1:after {	-webkit-animation-delay: 0s;	}	#explosion1 {	top: 30%;	left: 60%;	}
+#explosion2:after {	-webkit-animation-delay: 0.5s;	}	#explosion2 {	top: 40%;	left: 40%;	}
+#explosion3:after {	-webkit-animation-delay: 1.2s;	}	#explosion3 {	top: 9%;	left: 62%;	}
+#explosion4:after {	-webkit-animation-delay: 1.5s;	}	#explosion4 {	top: 70%;	left: 80%;	}
+</style>
+	<body>
+		<div id="explosion1" class="explosion"></div>
+		<div id="explosion2" class="explosion"></div>
+		<div id="explosion3" class="explosion"></div>
+		<div id="explosion4" class="explosion"></div>
+	
+</body></html>

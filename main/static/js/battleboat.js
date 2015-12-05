@@ -14,14 +14,12 @@ CONST.CSS_TYPE_SHIP = 'ship';
 CONST.CSS_TYPE_MISS = 'miss';
 CONST.CSS_TYPE_HIT = 'hit';
 CONST.CSS_TYPE_SUNK = 'sunk';
-CONST.CSS_TYPE_IMPOSS = 'imposs';
 // Коди grid :
 CONST.TYPE_EMPTY = 0; // 0 = вода (пусто)
 CONST.TYPE_SHIP = 1; // 1 = непошкоджений корабель
 CONST.TYPE_MISS = 2; // 2 = вода (промах)
 CONST.TYPE_HIT = 3; // 3 = пошкоджений корабль
 CONST.TYPE_SUNK = 4; // 4 = розбитий корабель
-CONST.TYPE_IMPOSS = 5; // 5 = неможливий для розміщення
 
 // 0) 'carrier' 1) 'battleship' 2) 'destroyer' 3) 'submarine' 4) 'patrolboat'
 // Використовувати лише коли DEBUG_MODE === true.
@@ -139,19 +137,21 @@ Game.gameOver = false;
 // перевірка чи переміг гравець
 Game.prototype.checkIfWon = function() {
 	if (this.computerFleet.allShipsSunk()) {
-		alert('Congratulations, you win!');
+		alert('Вітаємо, ви виграли!');
 		Game.gameOver = true;
 		Game.stats.wonGame();
 		Game.stats.syncStats();
 		Game.stats.updateStatsSidebar();
 		this.showRestartSidebar();
+		end_game(0, 1);
 	} else if (this.humanFleet.allShipsSunk()) {
-		alert('Yarr! The computer sank all your ships. Try again.');
+		alert('Ви програли(.');
 		Game.gameOver = true;
 		Game.stats.lostGame();
 		Game.stats.syncStats();
 		Game.stats.updateStatsSidebar();
 		this.showRestartSidebar();
+		end_game(0, 0);	
 	}
 };
 // Вистріли по ігровому полю
@@ -159,6 +159,7 @@ Game.prototype.checkIfWon = function() {
 Game.prototype.shoot = function(x, y, targetPlayer) {
 	var targetGrid;
 	var targetFleet;
+
 	if (targetPlayer === CONST.HUMAN_PLAYER) {
 		targetGrid = this.humanGrid;
 		targetFleet = this.humanFleet;
@@ -174,15 +175,22 @@ Game.prototype.shoot = function(x, y, targetPlayer) {
 	} else if (targetGrid.isMiss(x, y)) {
 		return null;
 	} else if (targetGrid.isUndamagedShip(x, y)) {
-		// оновлення поля
 		
-		console.log("undamaged");
-
+		var place = x * 10 + y;
+		// оновлення поля
 		targetGrid.updateCell(x, y, 'hit', targetPlayer);
 		
+		console.log("x = " + x);
+		console.log("y = " + y);
+		console.log("place = " + place);
+
 		// рахуємо втрати і відображаємо їх
 		targetFleet.findShipByCoords(x, y).incrementDamage();
 		this.checkIfWon();
+		$($($(".grid-container .grid")[targetPlayer]).find('.grid-cell')[place]).append('<div id="explosion1" class="explosion"></div>')
+		setTimeout(function() {
+			$("#explosion1").remove();
+		}, 1000);
 		return CONST.TYPE_HIT;
 	} else {
 		targetGrid.updateCell(x, y, 'miss', targetPlayer);
@@ -311,7 +319,7 @@ Game.prototype.placementMouseout = function(e) {
 		}
 	}
 };
-// Повернутикоралель
+// Повернути коралель
 Game.prototype.toggleRotation = function(e) {
 	var direction = parseInt(e.target.getAttribute('data-direction'), 10);
 	if (direction === Ship.DIRECTION_VERTICAL) {
@@ -493,7 +501,37 @@ Game.prototype.init = function() {
 	randomButton.self = this;
 	randomButton.addEventListener('click', this.placeRandomly, false);
 	this.computerFleet.placeShipsRandomly();
+	start_game(1, null);
 };
+
+function start_game(is_computer, user) {
+	var xhr = new XMLHttpRequest();
+
+	xhr.open("POST", '/start_game/', true)
+	xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+	xhr.setRequestHeader("X-CSRFToken", document.getElementsByName('csrfmiddlewaretoken')[0].value);
+	var body = {
+		'is_computer': is_computer,
+		'user': user,
+	}
+	xhr.send(JSON.stringify(body));
+}
+
+
+function end_game(is_computer, you_win)
+{
+	var xhr = new XMLHttpRequest();
+
+	xhr.open("POST", '/end_game/', true)
+	xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+	xhr.setRequestHeader("X-CSRFToken", document.getElementsByName('csrfmiddlewaretoken')[0].value);
+	var body = {
+		'is_computer': is_computer,
+		'you_win': you_win
+	}
+	xhr.send(JSON.stringify(body));
+}
+
 
 // Grid object
 function Grid(size) {
@@ -584,8 +622,7 @@ Fleet.prototype.placeShip = function(x, y, direction, shipType) {
 		var shipTypes = this.fleetRoster[i].type;
 
 	
-		if (shipType === shipTypes &&
-			this.fleetRoster[i].isLegal(x, y, direction)) {
+		if (shipType === shipTypes && this.fleetRoster[i].isLegal(x, y, direction)) {
 			this.fleetRoster[i].create(x, y, direction, false);
 			shipCoords = this.fleetRoster[i].getAllShipCells();
 
@@ -597,14 +634,12 @@ Fleet.prototype.placeShip = function(x, y, direction, shipType) {
 	}
 	return false;
 };
-// Places ships randomly on the board
-// TODO: Avoid placing ships too close to each other
+// Розміщення кораблів рандомно
 Fleet.prototype.placeShipsRandomly = function() {
 	var shipCoords;
 	for (var i = 0; i < this.fleetRoster.length; i++) {
 		var illegalPlacement = true;
 	
-		// Prevents the random placement of already placed ships
 		if(this.player === CONST.HUMAN_PLAYER && Game.usedShips[i] === CONST.USED) {
 			continue;
 		}
@@ -629,9 +664,7 @@ Fleet.prototype.placeShipsRandomly = function() {
 		}
 	}
 };
-// Finds a ship by location
-// Returns the ship object located at (x, y)
-// If no ship exists at (x, y), this returns null instead
+// Шукаємо кораблі
 Fleet.prototype.findShipByCoords = function(x, y) {
 	for (var i = 0; i < this.fleetRoster.length; i++) {
 		var currentShip = this.fleetRoster[i];
@@ -655,10 +688,7 @@ Fleet.prototype.findShipByCoords = function(x, y) {
 	}
 	return null;
 };
-// Finds a ship by its type
-// Param shipType is a string
-// Returns the ship object that is of type shipType
-// If no ship exists, this returns null.
+// Пошук корабля за його типом
 Fleet.prototype.findShipByType = function(shipType) {
 	for (var i = 0; i < this.fleetRoster.length; i++) {
 		if (this.fleetRoster[i].type === shipType) {
@@ -667,11 +697,9 @@ Fleet.prototype.findShipByType = function(shipType) {
 	}
 	return null;
 };
-// Checks to see if all ships have been sunk
-// Returns boolean
+// Чи всі кораблі зруйновані
 Fleet.prototype.allShipsSunk = function() {
 	for (var i = 0; i < this.fleetRoster.length; i++) {
-		// If one or more ships are not sunk, then the sentence "all ships are sunk" is false.
 		if (this.fleetRoster[i].sunk === false) {
 			return false;
 		}
@@ -679,8 +707,7 @@ Fleet.prototype.allShipsSunk = function() {
 	return true;
 };
 
-// Ship object
-// Constructor
+// Об’єкт корабля
 function Ship(type, playerGrid, player, length) {
 	this.damage = 0;
 	this.type = type;
@@ -688,36 +715,14 @@ function Ship(type, playerGrid, player, length) {
 	this.player = player;
 
 	this.shipLength = length;
-/*
-	switch (this.type) {
-		case CONST.AVAILABLE_SHIPS[0]:
-			this.shipLength = 5;
-			break;
-		case CONST.AVAILABLE_SHIPS[1]:
-			this.shipLength = 4;
-			break;
-		case CONST.AVAILABLE_SHIPS[2]:
-			this.shipLength = 3;
-			break;
-		case CONST.AVAILABLE_SHIPS[3]:
-			this.shipLength = 3;
-			break;
-		case CONST.AVAILABLE_SHIPS[4]:
-			this.shipLength = 2;
-			break;
-		default:
-			this.shipLength = 3;
-			break;
-	}*/
 	this.maxDamage = this.shipLength;
 	this.sunk = false;
 }
-// Checks to see if the placement of a ship is legal
-// Returns boolean
+// Перевірка на те чи можливо розмістити корабель
 Ship.prototype.isLegal = function(x, y, direction) {
-	// first, check if the ship is within the grid...
+	// перевірка чи корабель знаходиться в межах гріда
 	if (this.withinBounds(x, y, direction)) {
-		// ...then check to make sure it doesn't collide with another ship
+		// перевірка чи корабель не на іншому кораблі
 		for (var i = 0; i < this.shipLength; i++) {
 			if (direction === Ship.DIRECTION_VERTICAL) {
 				if (this.playerGrid.cells[x + i][y] === CONST.TYPE_SHIP ||
@@ -738,8 +743,7 @@ Ship.prototype.isLegal = function(x, y, direction) {
 		return false;
 	}
 };
-// Checks to see if the ship is within bounds of the grid
-// Returns boolean
+// Метод перевірки чи знаходиться корабель в межах гріда
 Ship.prototype.withinBounds = function(x, y, direction) {
 	if (direction === Ship.DIRECTION_VERTICAL) {
 		return x + this.shipLength <= Game.size;
@@ -747,25 +751,21 @@ Ship.prototype.withinBounds = function(x, y, direction) {
 		return y + this.shipLength <= Game.size;
 	}
 };
-// Increments the damage counter of a ship
-// Returns Ship
+// Інкремент пошкоджених кораблів
 Ship.prototype.incrementDamage = function() {
 	this.damage++;
 	if (this.isSunk()) {
 		this.sinkShip(false); // Sinks the ship
 	}
 };
-// Checks to see if the ship is sunk
-// Returns boolean
+// Перевірка чи корабель затонув
 Ship.prototype.isSunk = function() {
 	return this.damage >= this.maxDamage;
 };
-// Sinks the ship
 Ship.prototype.sinkShip = function(virtual) {
-	this.damage = this.maxDamage; // Force the damage to exceed max damage
+	this.damage = this.maxDamage;
 	this.sunk = true;
 
-	// Make the CSS class sunk, but only if the ship is not virtual
 	if (!virtual) {
 		var allCells = this.getAllShipCells();
 		for (var i = 0; i < this.shipLength; i++) {
@@ -773,17 +773,7 @@ Ship.prototype.sinkShip = function(virtual) {
 		}
 	}
 };
-/**
- * Gets all the ship cells
- *
- * Returns an array with all (x, y) coordinates of the ship:
- * e.g.
- * [
- *	{'x':2, 'y':2},
- *	{'x':3, 'y':2},
- *	{'x':4, 'y':2}
- * ]
- */
+
 Ship.prototype.getAllShipCells = function() {
 	var resultObject = [];
 	for (var i = 0; i < this.shipLength; i++) {
@@ -795,16 +785,13 @@ Ship.prototype.getAllShipCells = function() {
 	}
 	return resultObject;
 };
-// Initializes a ship with the given coordinates and direction (bearing).
-// If the ship is declared "virtual", then the ship gets initialized with
-// its coordinates but DOESN'T get placed on the grid.
+// Ініціалізація розміщення корабля, напрямку. Якщо корабель віртуальний,
+// то він не буде розміщений на гріду
 Ship.prototype.create = function(x, y, direction, virtual) {
-	// This function assumes that you've already checked that the placement is legal
 	this.xPosition = x;
 	this.yPosition = y;
 	this.direction = direction;
 
-	// If the ship is virtual, don't add it to the grid.
 	if (!virtual) {
 		for (var i = 0; i < this.shipLength; i++) {
 			if (this.direction === Ship.DIRECTION_VERTICAL) {
@@ -816,19 +803,15 @@ Ship.prototype.create = function(x, y, direction, virtual) {
 	}
 	
 };
-// direction === 0 when the ship is facing north/south
-// direction === 1 when the ship is facing east/west
+// напрямки розміщення кораблів
 Ship.DIRECTION_VERTICAL = 0;
 Ship.DIRECTION_HORIZONTAL = 1;
 
-// Tutorial Object
-// Constructor
 function Tutorial() {
 	this.currentStep = 0;
-	// Check if 'showTutorial' is initialized, if it's uninitialized, set it to true.
 	this.showTutorial = localStorage.getItem('showTutorial') !== 'false';
 }
-// Advances the tutorial to the next step
+
 Tutorial.prototype.nextStep = function() {
 	var humanGrid = document.querySelector('.human-player');
 	var computerGrid = document.querySelector('.computer-player');
@@ -876,32 +859,25 @@ Tutorial.prototype.nextStep = function() {
 	}
 };
 
-// AI Object
-// Optimal battleship-playing AI
-// Constructor
+// Конструктор штучного інтелекту
 function AI(gameObject) {
 	this.gameObject = gameObject;
 	this.virtualGrid = new Grid(Game.size);
 	this.virtualFleet = new Fleet(this.virtualGrid, CONST.VIRTUAL_PLAYER);
 
-	this.probGrid = []; // Probability Grid
+	this.probGrid = [];
 	this.initProbs();
 	this.updateProbs();
 }
-AI.PROB_WEIGHT = 5000; // arbitrarily big number
-// how much weight to give to the opening book's high probability cells
+AI.PROB_WEIGHT = 5000;
 AI.OPEN_HIGH_MIN = 20;
 AI.OPEN_HIGH_MAX = 30;
-// how much weight to give to the opening book's medium probability cells
 AI.OPEN_MED_MIN = 15;
 AI.OPEN_MED_MAX = 25;
-// how much weight to give to the opening book's low probability cells
 AI.OPEN_LOW_MIN = 10;
 AI.OPEN_LOW_MAX = 20;
-// Amount of randomness when selecting between cells of equal probability
 AI.RANDOMNESS = 0.1;
-// AI's opening book.
-// This is the pattern of the first cells for the AI to target
+
 AI.OPENINGS = [
 	{'x': 7, 'y': 3, 'weight': getRandom(AI.OPEN_LOW_MIN, AI.OPEN_LOW_MAX)},
 	{'x': 6, 'y': 2, 'weight': getRandom(AI.OPEN_LOW_MIN, AI.OPEN_LOW_MAX)},
@@ -922,14 +898,12 @@ AI.OPENINGS = [
 	{'x': 9, 'y': 9, 'weight': getRandom(AI.OPEN_HIGH_MIN, AI.OPEN_HIGH_MAX)},
 	{'x': 0, 'y': 0, 'weight': getRandom(AI.OPEN_HIGH_MIN, AI.OPEN_HIGH_MAX)}
 ];
-// Scouts the grid based on max probability, and shoots at the cell
-// that has the highest probability of containing a ship
+// Перевірка місця, куди стрілятиме комп і постріл
 AI.prototype.shoot = function() {
 	var maxProbability = 0;
 	var maxProbCoords;
 	var maxProbs = [];
 	
-	// Add the AI's opening book to the probability grid
 	for (var i = 0; i < AI.OPENINGS.length; i++) {
 		var cell = AI.OPENINGS[i];
 		if (this.probGrid[cell.x][cell.y] !== 0) {
@@ -941,7 +915,7 @@ AI.prototype.shoot = function() {
 		for (var y = 0; y < Game.size; y++) {
 			if (this.probGrid[x][y] > maxProbability) {
 				maxProbability = this.probGrid[x][y];
-				maxProbs = [{'x': x, 'y': y}]; // Replace the array
+				maxProbs = [{'x': x, 'y': y}];
 			} else if (this.probGrid[x][y] === maxProbability) {
 				maxProbs.push({'x': x, 'y': y});
 			}
@@ -954,19 +928,17 @@ AI.prototype.shoot = function() {
 
 	var result = this.gameObject.shoot(maxProbCoords.x, maxProbCoords.y, CONST.HUMAN_PLAYER);
 	
-	// If the game ends, the next lines need to be skipped.
 	if (Game.gameOver) {
+
 		Game.gameOver = false;
 		return;
 	}
 
 	this.virtualGrid.cells[maxProbCoords.x][maxProbCoords.y] = result;
 
-	// If you hit a ship, check to make sure if you've sunk it.
 	if (result === CONST.TYPE_HIT) {
 		var humanShip = this.findHumanShip(maxProbCoords.x, maxProbCoords.y);
 		if (humanShip.isSunk()) {
-			// Remove any ships from the roster that have been sunk
 			var shipTypes = [];
 			for (var k = 0; k < this.virtualFleet.fleetRoster.length; k++) {
 				shipTypes.push(this.virtualFleet.fleetRoster[k].type);
@@ -974,32 +946,19 @@ AI.prototype.shoot = function() {
 			var index = shipTypes.indexOf(humanShip.type);
 			this.virtualFleet.fleetRoster.splice(index, 1);
 
-			// Update the virtual grid with the sunk ship's cells
 			var shipCells = humanShip.getAllShipCells();
 			for (var _i = 0; _i < shipCells.length; _i++) {
 				this.virtualGrid.cells[shipCells[_i].x][shipCells[_i].y] = CONST.TYPE_SUNK;
 			}
 		}
 	}
-	// Update probability grid after each shot
 	this.updateProbs();
 };
-// Update the probability grid
+// Оновлення гріда
 AI.prototype.updateProbs = function() {
 	var roster = this.virtualFleet.fleetRoster;
 	var coords;
 	this.resetProbs();
-
-	// Probabilities are not normalized to fit in the interval [0, 1]
-	// because we're only interested in the maximum value.
-
-	// This works by trying to fit each ship in each cell in every orientation
-	// For every cell, the more legal ways a ship can pass through it, the more
-	// likely the cell is to contain a ship.
-	// Cells that surround known 'hits' are given an arbitrarily large probability
-	// so that the AI tries to completely sink the ship before moving on.
-
-	// TODO: Think about a more efficient implementation
 	for (var k = 0; k < roster.length; k++) {
 		for (var x = 0; x < Game.size; x++) {
 			for (var y = 0; y < Game.size; y++) {
@@ -1030,8 +989,6 @@ AI.prototype.updateProbs = function() {
 					}
 				}
 
-				// Set hit cells to probability zero so the AI doesn't
-				// target cells that are already hit
 				if (this.virtualGrid.cells[x][y] === CONST.TYPE_HIT) {
 					this.probGrid[x][y] = 0;
 				}
@@ -1039,7 +996,7 @@ AI.prototype.updateProbs = function() {
 		}
 	}
 };
-// Initializes the probability grid for targeting
+
 AI.prototype.initProbs = function() {
 	for (var x = 0; x < Game.size; x++) {
 		var row = [];
@@ -1049,7 +1006,7 @@ AI.prototype.initProbs = function() {
 		}
 	}
 };
-// Resets the probability grid to all 0.
+
 AI.prototype.resetProbs = function() {
 	for (var x = 0; x < Game.size; x++) {
 		for (var y = 0; y < Game.size; y++) {

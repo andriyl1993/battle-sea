@@ -6,5 +6,9 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^$', IndexView.as_view()),
     url(r'^new_game/', NewGameView.as_view()),
-    url(r'^example/', example),
+    url(r'^logout/', logout_user),
+    url(r'^registration/', registration),
+    url(r'^start_game/', start_game),
+    url(r'^end_game/', end_game),
+    url(r'^history/', history),
 ]

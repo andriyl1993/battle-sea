@@ -1,0 +1,53 @@
+{% extends "index.html" %}
+
+{% block content %}
+
+<style type="text/css">
+	table {
+		border-collapse: collapse;
+		width: 90%;
+		text-align: center;
+		margin: auto;
+	}
+	td {
+		border: 1px solid black;
+	}
+</style>
+
+<div class="table">
+	<table>
+	<tr>
+		<th>Дата бою</th>
+		<th>Перемога</th>
+		<th>Дата закінчення бою</th>
+		<th>Проти кого</th>
+	</tr>
+	<tbody>
+		{% for fight in fights %}
+			<tr>
+				<td>{{ fight.date_start }}</td>
+				<td>{% if fight.you_win == True %}
+						Так
+					{% else %}
+						Ні
+					{% endif %}
+				</td>
+				<td>
+					{% if fight.date_end %}
+						fight.date_end
+					{% else %}
+						не закінчений
+					{% endif %}
+				</td>
+				<td>{% if fight.user_fight == None %}
+						Проти комп’ютера
+					{% else %}
+						fight.user_fight.username
+					{% endif %}
+				</td>
+			</tr>
+		{% endfor %}
+	</tbody>
+	</table>
+</div>
+{% endblock %}

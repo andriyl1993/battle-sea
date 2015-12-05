@@ -3,62 +3,57 @@
 
 {% block content %}
 
-<head>
-	<meta charset="UTF-8">
-	
-	<link href="{% static 'css/styles.css' %}"  rel="stylesheet" media="all"/>
-</head>
-
 <div class="container">
-	<p>How to play</p>
+	{% csrf_token %}
+	<p>Як грати</p>
 	<ol class="instructions">
-		<li id="step1">Select your ships from the left-hand side</li>
-		<li id="step2">Place your ships on your map</li>
-		<li id="step3">Click on the cells of the enemy's map<br>
-		to find and destroy all five enemy ships</li>
-		<li id="step4">The computer will fire on your ships<br>
-		immediately after you fire on its ships.</li>
+		<li id="step1">Оберіть в лівому меню корабель.</li>
+		<li id="step2">Розмістіть його на вашому ігровому полі.</li>
+		<li id="step3">Клікніть на клітинку на полі супротивника<br>
+		щоб знищити кораблі.</li>
+		<li id="step4">Гравець-супротивник буде також атакувать ваші кораблі.</li>
 	</ol>
 	<div class="game-container">
 		<div id="restart-sidebar" class="hidden">
-			<h2>Try Again</h2>
-			<button id="restart-game">Restart Game</button>
+			<h2>Спробуйте знову.</h2>
+			<button id="restart-game">Перезапусти гру.</button>
 		</div><div id="roster-sidebar">
-			<h2>Place Your Ships</h2>
+			<h2>Розмістіть ваші кораблі</h2>
 			<ul class="fleet-roster">
-				<li id="patrolboat1_1">Patrol Boat 1</li>
-				<li id="patrolboat2_1">Patrol Boat 2</li>
-				<li id="patrolboat3_1">Patrol Boat 3</li>
-				<li id="patrolboat4_1">Patrol Boat 4</li>
-				<li id="destroyer1_2">Destroyer 1</li>
-				<li id="destroyer2_2">Destroyer 2</li>
-				<li id="destroyer3_2">Destroyer 3</li>
-				<li id="battleship1_3">Battleship 1</li>
-				<li id="battleship2_3">Battleship 2</li>
-				<li id="carrier1_4">Aircraft Carrier 1</li>
+				<li id="patrolboat1_1">Однопалубник 1</li>
+				<li id="patrolboat2_1">Однопалубник 2</li>
+				<li id="patrolboat3_1">Однопалубник 3</li>
+				<li id="patrolboat4_1">Однопалубник 4</li>
+				<li id="destroyer1_2">Двопалубник 1</li>
+				<li id="destroyer2_2">Двопалубник 2</li>
+				<li id="destroyer3_2">Двопалубник 3</li>
+				<li id="battleship1_3">Трипалубник 1</li>
+				<li id="battleship2_3">Трипалубник 2</li>
+				<li id="carrier1_4">Чотирипалубник 1</li>
 			</ul>
-			<button id="rotate-button" data-direction="0">Rotate Ship</button>
-			<button id="start-game" class="hidden">Start Game</button>
-			<button id="place-randomly" class="hidden">Place Randomly and Start</button>
+			<button id="rotate-button" data-direction="0">Повернути</button>
+			<button id="start-game" class="hidden">Початок гри</button>
+			<button id="place-randomly">Розмістити випадково і почати</button>
 		</div><div id="stats-sidebar">
-			<h2>Stats</h2>
-			<p><strong>Games Won</strong></p>
-			<p id="stats-wins">0 of 0</p>
-			<p><strong>Accuracy</strong></p>
+			<h2>Статистика</h2>
+			<p><strong>Виграних ігор</strong></p>
+			<p id="stats-wins">0 з 0</p>
+			<p><strong>Точність</strong></p>
 			<p id="stats-accuracy">0%</p>
-			<button id="reset-stats">Reset Stats</button>
+			<button id="reset-stats">Скинути статистику</button>
 			<button id="prob-heatmap" class="hidden">Show Probability Heatmap</button>
 		</div><div class="grid-container">
-			<h2>Your Fleet</h2>
-			<div class="grid human-player"><span class="no-js">Please enable JavaScript to play this game</span></div>
+			<h2>Ваша карта</h2>
+			<div class="grid human-player"><span class="no-js">Будь ласка, включіть JavaScript для гри</span></div>
 		</div><div class="grid-container">
-			<h2>Enemy Fleet</h2>
-			<div class="grid computer-player"><span class="no-js">Please enable JavaScript to play this game</span></div>
+			<h2>Карта супротивника</h2>
+			<div class="grid computer-player"><span class="no-js">Будь ласка, включіть JavaScript для гри</span></div>
 		</div>
 	</div>
 </div>
 
 <script src="{% static 'js/battleboat.js' %}"></script>
+<script src="{% static 'js/jquery-1.11.3.js' %}"></script>
 <span class="prefetch" id="prefetch1"></span>
 <span class="prefetch" id="prefetch2"></span>
 <span class="prefetch" id="prefetch3"></span>

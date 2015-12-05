@@ -3,8 +3,10 @@ html, body {
 	width: 100%;
 	padding: 0;
 	margin: 0;
+	height:100%;
 	background-color: #ddd;
 	min-width: 860px;
+	background: url('/static/img/sea_bg.png');
 }
 h1, h2, h3, h4, h5, h6, p, li, span {
 	font-family: 'Open Sans', Helvetica, Arial, sans-serif;
